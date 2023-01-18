@@ -4,9 +4,27 @@ import traceback
 import asyncio
 from area_db import *
 import area_db
+import datetime
 
 TOKEN = 'hogehoge12345678'
-client = discord.Client()
+dt_now = datetime.datetime.now()
+year_base = 2022
+dist_base = int(dt_now.strftime('%Y')) - 2023
+year_name = ['ジュニア','クラシック','シニア']
+if dist_base == 0 and int(dt_now.strftime('%m')) <= 6:
+    season = 'デビュー前'
+elif int(dt_now.strftime('%d')) < 15:
+    if int(dt_now.strftime('%m')) < 10:
+        season = dt_now.strftime('%m').strip('0') + '前半'
+    else:
+        season = dt_now.strftime('%m') + '前半'
+else:
+    if int(dt_now.strftime('%m')) < 10:
+        season = dt_now.strftime('%m').strip('0') + '後半'
+    else:
+        season = dt_now.strftime('%m') + '後半'
+
+client = discord.Client(activity=discord.Game(name=year_name[dist_base] + '級' + season))
 isrunning = False
 isPassingdeteal = False
 input_pref = True
@@ -105,12 +123,18 @@ async def on_message(message):
                             
 
                 json_get = requests.get(readurl).json()
+                print(json_get)
 
 
                 async with message.channel.typing(): # 送られてきたチャンネルで入力中と表示させる
                     await asyncio.sleep(15)
 
-                sendtext = '今日の天気は' + json_get['forecasts'][0]['telop'] + '、最高気温が' + json_get['forecasts'][0]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][0]['temperature']['min']['celsius'] + '度だそうだ'
+                try:
+                    sendtext = '今日の' + json_get['title'] + 'は' + json_get['forecasts'][0]['telop'] + '、最高気温が' + json_get['forecasts'][0]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][0]['temperature']['min']['celsius'] + '度だそうだ'
+                except:
+                    while str(type(json_get['forecasts'][0]['telop'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['max']['celsius'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['min']['celsius'])) == "<class 'NoneType'>":
+                        json_get = requests.get(readurl).json()
+
                 await message.channel.send(sendtext)
                 mintemp = json_get['forecasts'][0]['temperature']['min']['celsius']
                 if float(mintemp) <= 15.0:
@@ -126,5 +150,6 @@ async def on_message(message):
             except:
                 await message.channel.send('トレーナー君、来たまえ！もろもろ検証し直しだ！')
                 await message.channel.send(traceback.format_exc())
+                pass
 
 client.run(TOKEN)
