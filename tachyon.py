@@ -45,6 +45,7 @@ async def on_message(message):
     isPassingdeteal = False
     input_pref = True
     input_area = True
+    ispassingcomment = False
     sendtext = ''
     global isrunning
     def check(msg):
@@ -108,13 +109,14 @@ async def on_message(message):
                         isPassingdeteal = False
 
                 while input_area:
-                    for i in range(0,len(area_db.area_name)):
+                    #for i in range(0,len(area_db.area_name)):
+                    for i in range(area_db.pref_data[prefnum][1],area_db.pref_data[prefnum][2]):
                         if area_db.area_name[i][0] in wait_message.content:
                             readurl = weather_data_url + area_db.area_name[i][1]
                             input_area = False
                             break
 
-                        elif i == len(area_db.area_name)-1:
+                        elif i == area_db.pref_data[prefnum][2]-1:
                             async with message.channel.typing(): # 送られてきたチャンネルで入力中と表示させる
                                 await asyncio.sleep(7)
                             await message.channel.send('トレーナーくん?ちゃんと地域を入れたまえ')
@@ -123,30 +125,41 @@ async def on_message(message):
                             
 
                 json_get = requests.get(readurl).json()
+                print(readurl)
                 print(json_get)
 
 
+                try:
+                    #sendtext = '今日の' + json_get['title'] + 'は' + json_get['forecasts'][0]['telop'] + '、最高気温が' + json_get['forecasts'][0]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][0]['temperature']['min']['celsius'] + '度だそうだ'
+                    sendtext = '今日の' + json_get['location']['prefecture']  + ' '+ json_get['location']['district'] + 'の天気は' + json_get['forecasts'][0]['telop'] + '、最高気温が' + json_get['forecasts'][0]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][0]['temperature']['min']['celsius'] + '度だそうだ'
+                except:
+                    print('except at line138')
+                    while str(type(json_get['forecasts'][0]['telop'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['max']['celsius'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['min']['celsius'])) == "<class 'NoneType'>":
+                        loop_count = loop_count + 1
+                        print('looping at line139-141')
+                        json_get = requests.get(readurl).json()
+                        if loop_count == 10:
+                            ispassingcomment = True
+                            sendtext = "トレーナーくん、どうやらデータが配信されていないようだ。日付が変わるまで待ってもらってもいいかな?"
+                            break
+                            
                 async with message.channel.typing(): # 送られてきたチャンネルで入力中と表示させる
                     await asyncio.sleep(15)
 
-                try:
-                    sendtext = '今日の' + json_get['title'] + 'は' + json_get['forecasts'][0]['telop'] + '、最高気温が' + json_get['forecasts'][0]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][0]['temperature']['min']['celsius'] + '度だそうだ'
-                except:
-                    while str(type(json_get['forecasts'][0]['telop'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['max']['celsius'])) == "<class 'NoneType'>" or str(type(json_get['forecasts'][0]['temperature']['min']['celsius'])) == "<class 'NoneType'>":
-                        json_get = requests.get(readurl).json()
-
                 await message.channel.send(sendtext)
-                mintemp = json_get['forecasts'][0]['temperature']['min']['celsius']
-                if float(mintemp) <= 15.0:
-                    async with message.channel.typing(): # 送られてきたチャンネルで入力中と表示させる
-                        await asyncio.sleep(27)
-                    await message.channel.send('ヒトという生き物は15度を下回ると肌寒さを感じるらしい。それは私たちウマ娘も同様だ。ということでトレーナーくん、こたつの準備はいいね?')
+                if not ispassingcomment:
+                    mintemp = json_get['forecasts'][0]['temperature']['min']['celsius']
+                    if float(mintemp) <= 15.0:
+                        async with message.channel.typing(): # 送られてきたチャンネルで入力中と表示させる
+                            await asyncio.sleep(27)
+                        await message.channel.send('ヒトという生き物は15度を下回ると肌寒さを感じるらしい。それは私たちウマ娘も同様だ。ということでトレーナーくん、こたつの準備はいいね?')
                         
 
 
                 isrunning = False
                 input_pref = True
                 input_area = True
+                ispassingcomment = False
             except:
                 await message.channel.send('トレーナー君、来たまえ！もろもろ検証し直しだ！')
                 await message.channel.send(traceback.format_exc())
