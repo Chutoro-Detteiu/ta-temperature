@@ -160,7 +160,7 @@ async def on_message(message):
                                 sendtext = day + 'の' + json_get['location']['prefecture']  + ' '+ json_get['location']['district'] + 'の天気は' + json_get['forecasts'][daynum]['telop'] + '、最高気温が' + json_get['forecasts'][daynum]['temperature']['max']['celsius'] + '度で最低気温が' + json_get['forecasts'][daynum]['temperature']['min']['celsius'] + '度だそうだ'
 
                     except:
-                        while json_get['forecasts'][daynum]['telop'] == None:
+                        while json_get['forecasts'][daynum]['temperature']['max']['celsius'] == None:
                             loop_count = loop_count + 1
                             json_get = requests.get(readurl).json()
                             await asyncio.sleep(0.5)
