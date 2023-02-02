@@ -9,20 +9,20 @@ import datetime
 TOKEN = 'hogehoge12345678'
 dt_now = datetime.datetime.now()
 year_base = 2022
-dist_base = int(dt_now.strftime('%Y')) - 2023
+dist_base = int(dt_now.strftime('%Y')) - year_base
 year_name = ['ジュニア','クラシック','シニア']
 if dist_base == 0 and int(dt_now.strftime('%m')) <= 6:
     season = 'デビュー前'
 elif int(dt_now.strftime('%d')) < 15:
     if int(dt_now.strftime('%m')) < 10:
-        season = dt_now.strftime('%m').strip('0') + '前半'
+        season = dt_now.strftime('%m').strip('0') + '月前半'
     else:
-        season = dt_now.strftime('%m') + '前半'
+        season = dt_now.strftime('%m') + '月前半'
 else:
     if int(dt_now.strftime('%m')) < 10:
-        season = dt_now.strftime('%m').strip('0') + '後半'
+        season = dt_now.strftime('%m').strip('0') + '月後半'
     else:
-        season = dt_now.strftime('%m') + '後半'
+        season = dt_now.strftime('%m') + '月後半'
 
 client = discord.Client(activity=discord.Game(name=year_name[dist_base] + '級' + season))
 isrunning = False
